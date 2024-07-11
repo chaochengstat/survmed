@@ -1,0 +1,144 @@
+---
+title: "Survival Mediation Analysis with Expsoure Measurement Error"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{survmed_pkg}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  warning = FALSE,
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+
+## Introduction
+
+This vignette demonstrates the use of the R-package `survmed` to obtain bias-corrected estimates of the mediation effect measures in survival mediation analysis, under a main study/validation study design. We follow the methodology in Cheng et al (2023, [arXiv:2304.04868](https://arxiv.org/abs/2304.04868)).
+
+## Survival Mediation Analysis
+
+Suppose we have an exposure ($A$), a mediator ($M$), a survival outcome $\widetilde T$, and a set of baseline covariates ($W$). We are interested in assessing the natural indirect effect $\text{NIE}_{a,a^*|w}(t)$ and the natural direct effect $\text{NDE}_{a,a^*|w}(t)$. Here, $\text{NIE}_{a,a^*|w}(t)$ measures that, at a given time $t$, how much the log-hazard of the outcome would change if we set the exposure to a fixed level $a$ and change the mediator from the level it would be observed under $a^*$ versus $a$. On the other hand, $\text{NDE}_{a,a^*|w}(t)$ measures how much the log-hazard of the outcome at time $t$ would change if we change the exposure from level $a^*$ to $a$ and fix the mediator to its natural value under exposure level $a^*$. Meanwhile, we are also interested in estimating the total effect and mediation proportion:
+\begin{align*}
+\text{TE}_{a,a^*|w}(t) &=\text{NIE}_{a,a^*|w}(t)+\text{NDE}_{a,a^*|w}(t)\\
+\text{MP}_{a,a^*|w}(t)& =\text{NIE}_{a,a^*|w}(t)/\text{TE}_{a,a^*|w}(t)
+\end{align*} 
+All effects are conditioning on covariates level at $W=w$.
+
+We have two sets of expressions to calculate the mediation effect measures -- the approximate expression versus the exact expression. The exact expression provides precise formulas to calculate the mediation effects, but they have complex forms. When the outcome is rare, one can consider using the approximate expression with concise formulas. Importantly, the mediation effect measures under the approximate expression is constant over time $t$, i.e., $\tau_{a,a^*|w}(t)=\tau_{a,a^*|w}$ for all $\tau\in\{\text{NIE},\text{NDE},\text{TE},\text{MP}\}$.
+
+In this work, we assume that the exposure $A$ is mismeasured in the study and therefore may bias our survival mediation results.
+
+## Data structure
+
+Recall that $W$, $A$, $A^*$, $M$, $T$, and $\Delta$ represent the baseline covariates, true exposure, mismeasured exposure, mediator, observed failure time, and failure indicator, respectively. In the main study (samples with $I=1$), we observe $\{W,A^*,M,T,\Delta\}$, where the true exposure is unavailable. In the validation study, we observe $\{W,A,A^*,M,T\}$, which can be used to estimate the exposure measurement error process.
+
+## Basic syntax
+
+The data-fitting functions are `mediate_approx` and `mediate_exact`, where the first performs mediation analysis based on approximate expressions and the second performs mediation analysis based on exact expressions. For each function, the output includes four estimators, including an unadjusted estimator that ignores measurement error, and three bias-corrected estimators (based on ORC1, ORC2, and RRC approaches). 
+
+We can call `mediate_approx` by
+
+`mediate_approx(data,Iname,Tname,Dname,Aname,Asname,Mname,Wname,Time_sep,a0,a1,cw)`
+
+We require input the following arguments:
+
+* `data`: a `data.frame` data set
+* `Iname`: name of the indicator on the main/validation study (`I=1` for validation study sample, `I=0` for main study samples)
+* `Tname`: name of observed failure time
+* `Dname`: name of the failure indicator
+* `Aname`: name of the true exposure
+* `Asname`: name of the mismeasured exposure
+* `Mname`: name of the mediator
+* `Wname`: names of the covariates
+* `Time_sep`: a vector of time split points for RRC method
+* `a0`: baseline exposure level in the mediation effect measures
+* `a1`: active exposure level in the mediation effect measures
+* `cw`: levels of the covariates
+
+Similarly, one can call `mediate_exact` by
+
+`mediate_exact(data,Iname,Tname,Dname,Aname,Asname,Mname,Wname,Time_sep,a0,a1,cw)`
+
+Besides the arguments in `mediate_approx`, `mediate_exact` requires two additional arguments:
+
+* `t.list`: a list of time points for the mediation effect measures
+* `R`: number of bootstrap numbers (default 50)
+
+
+## Illustrative example based on the approximate expression
+
+Please library the `survmed` and `survival` packages at first.
+```{r setup}
+library(survmed)
+library(survival)
+```
+
+#### Attach dataset 
+
+We shall use the example data `example_data` for illustration. First, let's attach the dataset.
+
+```{r}
+attach(example_data)
+head(example_data)
+```
+
+Here, `A` is the true exposure, `M` is the mediator, `Time` is the observed failure time, `Event` is the failure indicator, `As` is the mismeasured exposure, `W` is a baseline covariate, `I` is the indicator for main study samples (`I=0`) and validation study samples (`I=1`). Notice that `A` is unavailable in the main study samples. 
+
+#### Specify the arguments
+
+Next, let's specify the arguments used in `mediate_approx`.
+
+```{r}
+## 1. specify the exposure, mediator, outcome, and covariates
+Iname="I" # name of the indicator of main/validation study samples
+Tname="Time" # name of observed failure time
+Dname="Event" # name of failure indicator
+Aname="A" # name of true exposure
+Asname = "As" # name of mismeasured exposure
+Mname = "M" # name of mediator
+Wname="W" # name of covariates
+
+## 2. specify split points for RRC method
+Time_sep=c(0,15,25,35)
+
+## 3. specify the conditional values in the mediation effect measures
+a0=0; a1=1; cw=0
+```
+
+#### Perform the mediation analysis
+
+Finally, run the following code to perform the survival mediation analysis
+
+```{r}
+mediate_approx(example_data,Iname,Tname,Dname,Aname,
+               Asname,Mname,Wname,Time_sep,a0,a1,cw)
+```
+
+
+
+## Illustrative example based on the exact expression
+
+Similarly, one can run `mediate_exact` to assess mediation based on the exact expressions. Since the mediation effect is now a function of time, one should additional specify a grid of time points (`t.list`) where their mediation effects are of interest. Here, we estimate $\tau_{a,a^*|w}(t)$ with $t\in\{10,15,20,25,30,35,40\}$:
+
+```{r}
+## 1. specify t.list
+t.list=c(10,15,20,25,30,35,40)
+
+## 2. perform the mediation analysis based on the exact expression
+res=mediate_exact(example_data,Iname,Tname,Dname,Aname,
+               Asname,Mname,Wname,t.list,Time_sep,a0,a1,cw,R=20)
+
+## 3. print the RRC estimates 
+## One can obtain the unadjusted, ORC1, ORC2 estimates by printing 
+## res$Unadjusted, res$ORC1, and res$IRC2, respectively.
+res$RRC
+```
+
+Each row represents the mediation effect at a given time point. In this example, we set the number of boostrap replications at `R=20` for illustrative purposes. One should specify a large `R` (e.g., 500) in real data analysis.   
+
