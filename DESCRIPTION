@@ -4,7 +4,7 @@ Title: Survival Mediation Analysis with Exposure Measurement Error
 Version: 0.1.0
 Author: Chao Cheng
 Maintainer: Chao Cheng <chao.chengstat@gmail.com>
-Description: This package provides the regression calibration methods for correcting the bias due to exposure measurement errors in survival mediation analysis, based on the methodology in 
+Description: This package provides the regression calibration methods for correcting the bias due to exposure measurement errors in survival mediation analysis, based on the methodology in Cheng et al (2023, arXiv:2304.04868).
 License: GPL
 Encoding: UTF-8
 LazyData: true

@@ -19,7 +19,7 @@ knitr::opts_chunk$set(
 
 ## Introduction
 
-This vignette demonstrates the use of the R-package `survmed` to obtain bias-corrected estimates of the mediation effect measures in survival mediation analysis, under a main study/validation study design. We follow the methodology in Cheng et al (2023, [arXiv:2304.04868](https://arxiv.org/abs/2304.04868)).
+This vignette demonstrates the use of the R-package `survmed` (available at [this github page](https://github.com/chaochengstat/survmed)) to obtain bias-corrected estimates of the mediation effect measures in survival mediation analysis, under a main study/validation study design. We follow the methodology in Cheng et al (2023, [arXiv:2304.04868](https://arxiv.org/abs/2304.04868)).
 
 ## Survival Mediation Analysis
 
@@ -36,7 +36,7 @@ In this work, we assume that the exposure $A$ is mismeasured in the study and th
 
 ## Data structure
 
-Recall that $W$, $A$, $A^*$, $M$, $T$, and $\Delta$ represent the baseline covariates, true exposure, mismeasured exposure, mediator, observed failure time, and failure indicator, respectively. In the main study (samples with $I=1$), we observe $\{W,A^*,M,T,\Delta\}$, where the true exposure is unavailable. In the validation study, we observe $\{W,A,A^*,M,T\}$, which can be used to estimate the exposure measurement error process.
+Recall that $W$, $A$, $A^*$, $M$, $T$, and $\Delta$ represent the baseline covariates, true exposure, mismeasured exposure, mediator, observed failure time, and failure indicator, respectively. In the main study (samples with $I=0$), we observe $\{W,A^*,M,T,\Delta\}$, where the true exposure is unavailable. In the validation study (samples with $I=1$), we observe $\{W,A,A^*,M,T\}$, which can be used to estimate the exposure measurement error process.
 
 ## Basic syntax
 
