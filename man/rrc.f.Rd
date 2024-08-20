@@ -36,7 +36,7 @@ rrc.f(
 \item{Dname}{name of the failure indicator.}
 }
 \value{
-ORC2 estimates of the regression coefficients.
+RRC estimates of the regression coefficients.
 }
 \description{
 RRC method to obtain the mediator and outcome coefficients

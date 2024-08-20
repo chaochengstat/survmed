@@ -183,7 +183,7 @@ orc2.ef=function(Outcome.formula,Mediator.formula,ME1.formula,ME2.formula,data,
 #' @param Iname name of the indicator on the main/validation study (I=1 for validation study sample, I=0 for main study samples).
 #' @param Tname name of the observed failure time.
 #' @param Dname name of the failure indicator.
-#' @returns ORC2 estimates of the regression coefficients.
+#' @returns RRC estimates of the regression coefficients.
 rrc.ef=function(Outcome.formula,Outcome.formula.rrc,Mediator.formula,ME1.formula,ME2.formula,data,Time_sep,
                Iname,Tname,Dname,Aname,Asname,Mname,Wname,is.boot=0) {
   data.main = data[which(data[,Iname]==0),]

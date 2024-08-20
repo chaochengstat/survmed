@@ -1,0 +1,10 @@
+name: Publish Document
+title:
+username:
+account: rpubs
+server: rpubs.com
+hostUrl: rpubs.com
+appId: https://api.rpubs.com/api/v1/document/1203455/26b07f147c9f4d5fbfebf49b6de3cce4
+bundleId: https://api.rpubs.com/api/v1/document/1203455/26b07f147c9f4d5fbfebf49b6de3cce4
+url: http://rpubs.com/chaocheng/1203455
+version: 1

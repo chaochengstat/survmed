@@ -30,7 +30,7 @@ Suppose we have an exposure ($A$), a mediator ($M$), a survival outcome $\wideti
 \end{align*} 
 All effects are conditioning on covariates level at $W=w$.
 
-We have two sets of expressions to calculate the mediation effect measures -- the approximate expression versus the exact expression. The exact expression provides precise formulas to calculate the mediation effects, but they have complex forms. When the outcome is rare, one can consider using the approximate expression with concise formulas. Importantly, the mediation effect measures under the approximate expression is constant over time $t$, i.e., $\tau_{a,a^*|w}(t)=\tau_{a,a^*|w}$ for all $\tau\in\{\text{NIE},\text{NDE},\text{TE},\text{MP}\}$.
+We have two sets of expressions to calculate the mediation effect measures -- the approximate expression versus the exact expression. The exact expression provides precise formulas to calculate the mediation effects, but they have complex forms. When the outcome is rare, one can consider using the approximate expression with concise formulas. Importantly, the mediation effect measures under the approximate expression are constant over time $t$, i.e., $\tau_{a,a^*|w}(t)=\tau_{a,a^*|w}$ for all $\tau\in\{\text{NIE},\text{NDE},\text{TE},\text{MP}\}$.
 
 In this work, we assume that the exposure $A$ is mismeasured in the study and therefore may bias our survival mediation results.
 
@@ -46,7 +46,7 @@ We can call `mediate_approx` by
 
 `mediate_approx(data,Iname,Tname,Dname,Aname,Asname,Mname,Wname,Time_sep,a0,a1,cw)`
 
-We require input the following arguments:
+The following arguments are required:
 
 * `data`: a `data.frame` data set
 * `Iname`: name of the indicator on the main/validation study (`I=1` for validation study sample, `I=0` for main study samples)
@@ -140,5 +140,46 @@ res=mediate_exact(example_data,Iname,Tname,Dname,Aname,
 res$RRC
 ```
 
-Each row represents the mediation effect at a given time point. In this example, we set the number of boostrap replications at `R=20` for illustrative purposes. One should specify a large `R` (e.g., 500) in real data analysis.   
+Each row represents the mediation effect at a given time point. In this example, we set the number of boostrap replications at `R=20` for illustrative purposes. One should specify a large `R` (e.g., 500) in real data analysis.  
+
+
+#### Other applications
+
+The R package can be applied to settings beyond correcting measurement errors in survival mediation analysis, including (i) performing standard survival mediation analysis without exposure measurement error (this is equivalent to implementing an uncorrected estimator) and (ii) performing bias-corrected coefficient estimation in Cox regression models under a main study/validation study design. Next, we provide example syntax for the second application. 
+
+Specifically, we consider a Cox model with baseline hazard $\lambda(t|W)=\beta_1 A + \beta_2 W$, where $A$ is a univariate variable that is subject to measurement error and $W$ is a vector of other covariates that are free of measurement error. Based on the methodology in Cheng et al (2023, [arXiv:2304.04868](https://arxiv.org/abs/2304.04868)), we can consider using ordinary/risk-set regression calibration to correct the bias in estimating $\beta=[\beta_1,\beta_2]$. The ordinary regression calibration (ORC) runs a standard Cox model with $A$ in replacement of $E[A|A^*,W]$, and the risk-set regression calibration (RRC) runs a standard Cox model with $A$ in replacement of $E[A|A^*,W,T>t]$, where $E[A|A^*,W]$ and $E[A|A^*,W,T>t]$ can be estimated based on an external validation data set. We have created functions `cox_orc.f` and `cox_rrc.f` to help implement ORC and RRC methods to correct the bias in the Cox model $\lambda(t|W)=\beta_1 A + \beta_2 W$. We can call `cox_orc.f` by
+
+`cox_orc.f(data,Iname,Tname,Dname,Aname,Asname,Wname)`
+
+The following arguments are required:
+
+* `data`: a `data.frame` data set
+* `Iname`: name of the indicator on the main/validation study (`I=1` for validation study sample, `I=0` for main study samples)
+* `Tname`: name of observed failure time
+* `Dname`: name of the failure indicator
+* `Aname`: name of the true measurement of $A$
+* `Asname`: name of the mismeasured measurement of $A$
+* `Wname`: names of other covariates that are free of measurement error (i.e., $W$).
+
+Similarly, one can call `cox_rrc.f` by
+
+`cox_rrc.f(data,Time_sep,Iname,Tname,Dname,Aname,Asname,Wname)`
+
+Besides the arguments in `cox_orc.f`, `cox_rrc.f` additionally requires specifying `Time_sep`, which is a vector of time split points to estimate the time-varying regression model $E[A|A^*,W,T>t]$. Below, we illustrate the use of `cox_orc.f` and `cox_rrc.f` based on the example data `example_data`: 
+```{r}
+## 1. specify the exposure, mediator, outcome, and covariates
+Iname="I" # name of the indicator of main/validation study samples
+Tname="Time" # name of observed failure time
+Dname="Event" # name of failure indicator
+Aname="A" # name of true exposure
+Asname = "As" # name of mismeasured exposure
+Wname="W" # name of covariates
+Time_sep=c(0,15,25,35) # specify split points for RRC method
+
+## 2. Perform the ORC estimator
+cox_orc.f(example_data,Iname,Tname,Dname,Aname,Asname,Wname)
+
+## 2. Perform the RRC estimator
+cox_rrc.f(example_data,Time_sep,Iname,Tname,Dname,Aname,Asname,Wname)
+```
 

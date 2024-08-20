@@ -36,7 +36,7 @@ rrc.ef(
 \item{Dname}{name of the failure indicator.}
 }
 \value{
-ORC2 estimates of the regression coefficients.
+RRC estimates of the regression coefficients.
 }
 \description{
 RRC method (for exact expressions)
