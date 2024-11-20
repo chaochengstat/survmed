@@ -145,9 +145,47 @@ Each row represents the mediation effect at a given time point. In this example,
 
 #### Other applications
 
-The R package can be applied to settings beyond correcting measurement errors in survival mediation analysis, including (i) performing standard survival mediation analysis without exposure measurement error (this is equivalent to implementing an uncorrected estimator) and (ii) performing bias-corrected coefficient estimation in Cox regression models under a main study/validation study design. Next, we provide example syntax for the second application. 
+The R package can be applied to settings beyond correcting measurement errors in survival mediation analysis, including (i) performing standard survival mediation analysis without exposure measurement error (this is equivalent to implementing an uncorrected estimator) and (ii) performing bias-corrected coefficient estimation in Cox regression models under a main study/validation study design. We provide example syntax for each application separately.
 
-Specifically, we consider a Cox model with baseline hazard $\lambda(t|W)=\beta_1 A + \beta_2 W$, where $A$ is a univariate variable that is subject to measurement error and $W$ is a vector of other covariates that are free of measurement error. Based on the methodology in Cheng et al (2023, [arXiv:2304.04868](https://arxiv.org/abs/2304.04868)), we can consider using ordinary/risk-set regression calibration to correct the bias in estimating $\beta=[\beta_1,\beta_2]$. The ordinary regression calibration (ORC) runs a standard Cox model with $A$ in replacement of $E[A|A^*,W]$, and the risk-set regression calibration (RRC) runs a standard Cox model with $A$ in replacement of $E[A|A^*,W,T>t]$, where $E[A|A^*,W]$ and $E[A|A^*,W,T>t]$ can be estimated based on an external validation data set. We have created functions `cox_orc.f` and `cox_rrc.f` to help implement ORC and RRC methods to correct the bias in the Cox model $\lambda(t|W)=\beta_1 A + \beta_2 W$. We can call `cox_orc.f` by
+We first consider the first application. If the true exposure $A$ is available in the study, one can run the standard mediation analysis (i.e., the unadjusted estimator) by running
+
+`mediate_unadj_approx(data,Tname,Dname,Aname,Mname,Wname,a0,a1,cw)`
+
+or 
+
+`mediate_unadj_exact(data,Tname,Dname,Aname,Mname,Wname,t.list,a0,a1,cw,R)`
+
+Here, `mediate_unadj_approx` and `mediate_unadj_exact` present the mediation analysis based on the approximate and exact expressions, respectively. The following arguments are required:
+
+* `data`: a `data.frame` data set
+* `Tname`: name of observed failure time
+* `Dname`: name of the failure indicator
+* `Aname`: name of the true exposure
+* `Mname`: name of the mediator
+* `Wname`: names of the covariates
+* `Time_sep`: a vector of time split points for RRC method
+* `a0`: baseline exposure level in the mediation effect measures
+* `a1`: active exposure level in the mediation effect measures
+* `cw`: levels of the covariates
+* `t.list`: a list of time points for the mediation effect measures
+* `R`: number of bootstrap numbers (default 50)
+
+Below, we illustrate the use of `mediate_unadj_approx` based on the example data `example_data`: 
+```{r}
+## 1. attach dataset
+attach(data2)
+## 2. specify the exposure, mediator, outcome, and covariates
+Tname="Time" # name of observed failure time
+Dname="Event" # name of failure indicator
+Aname="A" # name of true exposure
+Mname = "M"  # name of mediator
+Wname="W" # name of covariates
+## 3. Perform the mediation analysis under approximate expressions 
+mediate_unadj_approx(data2,Tname,Dname,Aname,Mname,Wname,a0=0,a1=1,cw=0)
+```
+
+
+Next, we provide example syntax for the second application. Specifically, we consider a Cox model with baseline hazard $\lambda(t|W)=\beta_1 A + \beta_2 W$, where $A$ is a univariate variable that is subject to measurement error and $W$ is a vector of other covariates that are free of measurement error. Based on the methodology in Cheng et al (2023, [arXiv:2304.04868](https://arxiv.org/abs/2304.04868)), we can consider using ordinary/risk-set regression calibration to correct the bias in estimating $\beta=[\beta_1,\beta_2]$. The ordinary regression calibration (ORC) runs a standard Cox model with $A$ in replacement of $E[A|A^*,W]$, and the risk-set regression calibration (RRC) runs a standard Cox model with $A$ in replacement of $E[A|A^*,W,T>t]$, where $E[A|A^*,W]$ and $E[A|A^*,W,T>t]$ can be estimated based on an external validation data set. We have created functions `cox_orc.f` and `cox_rrc.f` to help implement ORC and RRC methods to correct the bias in the Cox model $\lambda(t|W)=\beta_1 A + \beta_2 W$. We can call `cox_orc.f` by
 
 `cox_orc.f(data,Iname,Tname,Dname,Aname,Asname,Wname)`
 
